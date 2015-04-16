@@ -13,7 +13,7 @@ class Modules_Router
 	}
 	
 	
-	static function route($module, $params)
+	static function route($module, $params, $json=false)
 	{
 		if (!array_key_exists($module, self::$modules)) {
 			return false;
@@ -24,7 +24,16 @@ class Modules_Router
 			$scorePos = 0;
 		}
 		$moduleQualified = "Modules_" . substr($scorePos, 0, $scorePos) . "Action" . substr($module, $scorePos - strlen($module));
-		return $moduleQualified::run($params);
+        $result = $moduleQualified::run($params);
+
+        if ($json) {
+            $jsonOpts = 0;
+            // PHP >=5.4
+            (defined("JSON_PRETTY_PRINT")) && $jsonOpts |= JSON_PRETTY_PRINT;
+            $result = json_encode($result, $jsonOpts);
+        }
+
+        return $result;
 	}
 
 

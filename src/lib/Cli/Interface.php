@@ -93,13 +93,13 @@ EOT
 					$assocParams[$k] = $v;
 				}
 				
-				$output = Modules_Router::route($cmd, $assocParams);
+				$output = Modules_Router::route($cmd, $assocParams, true);
 				if ($output === false) {
 					fwrite(STDERR, "Module or command not available.\n");
 				} else {
 					fwrite(
 						STDOUT,
-						json_encode($output) . "\n"
+						$output . "\n"
 					);
 				}
 		}

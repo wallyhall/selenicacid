@@ -7,10 +7,12 @@ class Cli_HttpServer
 	private static $sock = null;
 
 	static function handleSignal($sig)
-	{
+    {
 		switch ($sig) {
-			case SIGTERM:
-				self::$shutdown = true;
+            case SIGTERM:
+            case SIGINT:
+                self::$shutdown = true;
+                fwrite(STDOUT, "** httpd: caught shutdown request, shutting down...\n");
 				break;
 		}
 		
@@ -22,7 +24,8 @@ class Cli_HttpServer
 		fwrite(STDOUT, "HTTPD server starting...\n");
 		
 		if (PCNTL_ENABLED) {
-			pcntl_signal(SIGTERM, array("Cli_HttpdServer", "handleSignal"));
+			pcntl_signal(SIGTERM, array("Cli_HttpServer", "handleSignal"));
+			pcntl_signal(SIGINT, array("Cli_HttpServer", "handleSignal"));
 		}
 	
 		self::fork($user);
@@ -36,64 +39,51 @@ class Cli_HttpServer
 	
 	static function openPort()
 	{
-		if ((self::$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
-			fwrite(STDERR, "** httpd: socket_create() failed: " . socket_strerror(socket_last_error()) . "\n");
+		if ((self::$sock = stream_socket_server("tcp://0.0.0.0:8080", $errno, $errstr)) === false) {
+			fwrite(STDERR, "** httpd: stream_socket_server() failed: " . $errno . " - " . $errstr . "\n");
 			exit(100);
-		}
-		
-		if (!socket_set_option(self::$sock, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 5, 'usec' => 0))) {
-			fwrite(STDERR, "** httpd: socket_set_option() failed: " . socket_strerror(socket_last_error(self::$sock)) . "\n");
-			exit(103);		
-		}
-
-		if (socket_bind(self::$sock, "0.0.0.0", 8080) === false) {
-			fwrite(STDERR, "** httpd: socket_bind() failed: " . socket_strerror(socket_last_error(self::$sock)) . "\n");
-			exit(101);
-		}
-
-		// Allow backlog of 5 connections before refusing more
-		if (socket_listen(self::$sock, 5) === false) {
-			fwrite(STDERR, "** httpd: socket_listen() failed: " . socket_strerror(socket_last_error(self::$sock)) . "\n");
-			exit(102);
 		}
 	}
 	
 	static function readCmd()
 	{
-		while (!self::$shutdown) {
-			if (($msgsock = socket_accept(self::$sock)) === false) {
-				fwrite(STDERR, "socket_accept() failed: reason: " . socket_strerror(socket_last_error(self::$sock)) . "\n");
-				break;
-			}
+        while (!self::$shutdown) {
+            if (($conn = stream_socket_accept(self::$sock)) === false) {
+                fwrite(STDERR, "Accept failed.\n");
+                continue;
+            }
+            stream_set_blocking($conn, 0);
 
-			$requestLines = array();
-			$blankCount = 0;
-			$requestFinished = false;
-			while (!self::$shutdown && !$requestFinished && sizeof($request) < 100) {
-				if (false === ($buf = socket_read($msgsock, 2048, PHP_NORMAL_READ))) {
-					fwrite(STDERR, "socket_read() failed: reason: " . socket_strerror(socket_last_error($msgsock)) . "\n");
+            // reference array for select()
+            $connArray = array($conn);
+            $emptyArray = array();
+
+            $requestFinished = false;
+            $requestLines = array();
+            while (!self::$shutdown && !$requestFinished && sizeof($requestLines) < 100) {
+                stream_select($connArray, $emptyArray, $emptyArray, 5);
+				if (false === ($buf = fgets($conn))) {
+					fwrite(STDERR, "Read failed.\n");
 					break;
-				}
+                }
+
 				$buf = trim($buf);
 				fwrite(STDOUT, "  << $buf\n");
 				
 				if ($buf != "") {
 					$requestLines[] = $buf;
 				} else {
-					$blankCount++;
-					if ($blankCount > 1) {
-						$requestFinished = true;
-					}
-				}
+					$requestFinished = true;
+                }
 			}
-			
+
 			if (self::$shutdown) {
 				$response = "HTTP/1.0 500 Server shutting down.\n\nServer shutdown in progress.";
 				fwrite(STDERR, "Request aborted due to pending shutdown.\n");
 				
 			} elseif (!$requestFinished) {
 				$response = "HTTP/1.0 400 Bad request.\n\nBad request.";
-				fwrite(STDERR, "Request was rejected ... size: " . sizeof($request) . "\n");
+				fwrite(STDERR, "Request was rejected ... size: " . sizeof($requestLines) . "\n");
 				
 			} else {
 				// do stuff
@@ -123,26 +113,26 @@ class Cli_HttpServer
 					
 					if ($rawParams === null) {
 						$assocParams = array();
-					} else {
-						$assocParams = array(); // ****
+                    } else {
+                        parse_str($rawParams, $assocParams);
 					}
 					
-					$output = Modules_Router::route($module, $assocParams);
+					$output = Modules_Router::route($module, $assocParams, true);
 					if ($output === false) {
 						$response = "HTTP/1.0 404 Not Found.\n\nModule not found.";
 					} else {
-						$response = "HTTP/1.0 200 OK\n\n" . json_encode($output);
+						$response = "HTTP/1.0 200 OK\n\n" . $output;
 					}
 				}
 			}
 
-			socket_write($msgsock, $response, strlen($response));
+            stream_select($emptyArray, $connArray, $emptyArray, 5);
+			fwrite($conn, $response, strlen($response));
 			fwrite(STDOUT, "  >> " . str_replace("\n", "\n  >> ", "$response\n"));
 
-			socket_close($msgsock);
-		}
-
-		socket_close(self::$sock);
+            fclose($conn);
+        }
+        fclose(self::$sock);
 		
 		if (!self::$shutdown) {
 			fwrite(STDERR, "Adnormal exit.\n");
