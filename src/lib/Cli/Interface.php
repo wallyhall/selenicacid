@@ -70,13 +70,20 @@ Available commands:
 	exit, quit, bye     Quit the interactive client
 	help                Displays this help message
 	list                Lists all modules available
+	
+RESTful commands (append module and parameters):
+	put					Create new object(s)
+	delete				Delete existing object(s)
+	get					Get object(s)
+	post				Update object(s)
+	
 
 EOT
 				);
 				break;
 			
 			case "list":
-				$modules = Modules_Router::listAll();
+				$modules = Modules_Router::listModules();
 				foreach ($modules as $module => $description) {
 					fwrite(
 						STDOUT,
@@ -85,23 +92,32 @@ EOT
 				}
 				fwrite(STDOUT, "\n");
 				break;
+
+			case "put":
+			case "get":
+			case "delete":
+			case "post":
+				$module = array_shift($params);
 			
-			default:
 				$assocParams = array();
 				foreach ($params as $param) {
 					list($k, $v) = array_merge(explode("=", $param, 2), array(true));
 					$assocParams[$k] = $v;
 				}
 				
-				$output = Modules_Router::route($cmd, $assocParams, true);
-				if ($output === false) {
-					fwrite(STDERR, "Module or command not available.\n");
-				} else {
+				try {
+					$output = Modules_Router::route($cmd, $module, $assocParams, true);
 					fwrite(
 						STDOUT,
 						$output . "\n"
 					);
+				} catch (RouterException $e) {
+					fwrite(STDERR, $e->getMessage() . "\n");
 				}
+				break;
+			
+			default:
+				fwrite(STDERR, "Invalid command.\n");
 		}
 		
 		return true;

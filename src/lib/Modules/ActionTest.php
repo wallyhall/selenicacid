@@ -1,8 +1,9 @@
 <?php
 
-class Modules_ActionTest
+class Modules_ActionTest implements Modules_Interface
 {
-	static function run($params) {
+	static function methodGet($params)
+	{
 		return array_merge(
 			array(
 				"hostname"=>php_uname('n'),
@@ -15,4 +16,14 @@ class Modules_ActionTest
 		);
 	}
 
+
+	static function getDescription()
+	{
+		return "Test module, returns machine information and random GUID.";
+	}
+	
+	static function getUI()
+	{
+		return array();
+	}
 }

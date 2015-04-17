@@ -52,8 +52,9 @@ if (!defined("__DIR__")) {
 	define("__DIR__", dirname(__FILE__));
 }
 
-$src = __DIR__ . "/src";
-$out = __DIR__ . "/bin/selenicacid.phar";
+$src = realpath(__DIR__ . "/src/");
+$out = realpath(__DIR__ . "/bin/selenicacid.phar");
+$mods = realpath($src . "/lib/Modules/");
 
 $phar = new Phar(
 	$out,				// output PHAR filename
@@ -63,6 +64,17 @@ $phar = new Phar(
 
 fwrite(STDOUT, " * Packaging contents of '" . $src . "'\n");
 $phar->buildFromDirectory($src);
+
+fwrite(STDOUT, " * Compiling list of modules\n");
+$modDirItr = new RecursiveDirectoryIterator($mods);
+$recModItr = new RecursiveIteratorIterator($modDirItr);
+$rgxModItr = new RegexIterator($recModItr, '~^' . $mods . '/(.*)Action([A-Z][a-zA-Z0-9]*)\.php$~', RegexIterator::REPLACE);
+$rgxModItr->replacement = '$1$2';
+$modulesList = iterator_to_array($rgxModItr, false);
+foreach ($modulesList as $module) {
+	fwrite(STDOUT, "    + " . $module . "\n");
+}
+$phar->addFromString("modules.json", json_encode($modulesList));
 
 fwrite(STDOUT, " * Setting up PHAR stub\n");
 $phar->setStub($phar->createDefaultStub('cli.php', 'httpRouter.php'));

@@ -1,30 +1,99 @@
 <?php
+class RouterException extends Exception
+{
+}
+
 class Modules_Router
 {
-	static private $modules = array(
-		"Test" => "A test module which returns server information and some random values.  Use for confirming selenicacid is running correctly.",
-		"Index" => "Welcome message for pathless HTTP requests."
-	);
 
+	private static $modules = null;
 
-	static function listAll()
+	static function loadModuleList()
+	{
+		self::$modules = json_decode(file_get_contents("phar://selenicacid.phar/modules.json"));
+		if (self::$modules === null) {
+			// Build didn't work?
+			die("\nUnable to read modules.json which implies the build process failed.\n");
+		}
+	}
+
+	static function listModules()
 	{
 		return self::$modules;
 	}
 	
-	
-	static function route($module, $params, $json=false)
+	static function moduleProvidesMethod($module, $method)
 	{
-		if (!array_key_exists($module, self::$modules)) {
-			return false;
+		$classMethod = "method" . ucwords(strtolower($method));
+		switch ($classMethod) {
+			case "methodPut":
+			case "methodPost":
+			case "methodDelete":
+			case "methodGet":
+				$moduleClass = self::getModuleClass($module);
+				return (method_exists($moduleClass, $classMethod));
+			
+			default:
+				return false;
 		}
+	}
 	
-		$scorePos = strrpos($module, '_');
-		if ($scorePos !== false) {
-			$scorePos = 0;
+	static function getModuleDescription($module)
+	{
+		$moduleClass = self::getModuleClass($module);
+		return $moduleClass::getDescription();
+	}
+	
+	static function getModuleUI($module)
+	{
+		$moduleClass = self::getModuleClass($module);
+		return $moduleClass::getUI();
+	}
+	
+	static function getModuleClass($module)
+	{
+		$scorePos = strrpos($module, '/');
+		if ($scorePos === false) {
+			$scorePos = -1;
 		}
-		$moduleQualified = "Modules_" . substr($scorePos, 0, $scorePos) . "Action" . substr($module, $scorePos - strlen($module));
-        $result = $moduleQualified::run($params);
+		$moduleClass =
+			"Modules_" .
+			str_replace("/", "_", 
+				substr($module, 0, $scorePos + 1) .
+				"Action" .
+				substr(
+					$module,
+					$scorePos - strlen($moduleClass) + 1
+				)
+			);
+
+		return $moduleClass;
+	}
+	
+	static function route($method, $module, $params, $json=false)
+	{
+		if (!in_array($module, self::$modules)) {
+			throw new RouterException("Module not found.", 404);
+		}
+		
+		$classMethod = "method" . ucwords(strtolower($method));
+		switch ($classMethod) {
+			case "methodPut":
+			case "methodPost":
+			case "methodDelete":
+			case "methodGet":
+				break;
+			
+			default:
+				throw new RouterException("Server does not support method.", 501);
+		}
+		
+		$moduleClass = self::getModuleClass($module);
+		
+		if (!method_exists($moduleClass, $classMethod)) {
+			throw new RouterException("Module does not implement method.", 405);
+		}
+        $result = $moduleClass::$classMethod($params);
 
         if ($json) {
             $jsonOpts = 0;
@@ -38,3 +107,8 @@ class Modules_Router
 
 
 }
+
+// Called when class is autoloaded (by nature of include()).
+// This populates Modules_Router::$modules list from JSON inside the PHAR.
+
+Modules_Router::loadModuleList();

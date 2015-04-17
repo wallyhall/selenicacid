@@ -92,9 +92,10 @@ class Cli_HttpServer
 			$rawParams = null;
 				
 			foreach ($requestLines as $requestLine) {
-				if (preg_match("/^(GET|POST)\s+(\S+)\s.*$/", $requestLine, $requestLineParts) === 1) {
+				if (preg_match("/^(GET|POST|PUT|DELETE)\s+(\S+)\s.*$/", $requestLine, $requestLineParts) === 1) {
 					$rawPath = parse_url($requestLineParts[2], PHP_URL_PATH);
 					$rawParams = parse_url($requestLineParts[2], PHP_URL_QUERY);
+					$method = $requestLineParts[1];
 					break;
 				}
 			}
@@ -107,7 +108,7 @@ class Cli_HttpServer
 					
 				// URL HANDLING
 					
-				$module = substr(str_replace("/", "_", $rawPath), 1);
+				$module = substr($rawPath, 1);
 				if ($module === false) {
 					$module = "Index";
 				}
@@ -118,11 +119,13 @@ class Cli_HttpServer
                     parse_str($rawParams, $assocParams);
 				}
 				
-				$output = Modules_Router::route($module, $assocParams, true);
-				if ($output === false) {
-					$response = "HTTP/1.0 404 Not Found.\n\nModule not found.";
-				} else {
+				try {
+					$output = Modules_Router::route($method, $module, $assocParams, true);
 					$response = "HTTP/1.0 200 OK\n\n" . $output;
+				} catch (RouterException $e) {
+					$response =
+						"HTTP/1.0 " . $e->getCode() . " " . $e->getMessage() . "\n\n" .
+						$e->getMessage();
 				}
 			}
 		}
