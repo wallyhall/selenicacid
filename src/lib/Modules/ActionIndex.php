@@ -2,33 +2,33 @@
 
 class Modules_ActionIndex implements Modules_Interface
 {
-	static function methodGet($params) {
-		return array ("Welcome");
-	}
+    public static function methodGet($params) {
+        return array ("Welcome");
+    }
 
-	static function methodPut($params)
-	{
-		return false;
-	}
+    public static function methodPut($params)
+    {
+        return false;
+    }
 
-	static function methodPost($params)
-	{
-		return false;
-	}
+    public static function methodPost($params)
+    {
+        return false;
+    }
 
-	static function methodDelete($params)
-	{
-		return false;
-	}
+    public static function methodDelete($params)
+    {
+        return false;
+    }
 
 
-	static function getDescription()
-	{
-		return "Test thing";
-	}
-	
-	static function getUI()
-	{
-		return array();
-	}
+    public static function getDescription()
+    {
+        return "Test thing";
+    }
+    
+    public static function getUI()
+    {
+        return array();
+    }
 }
