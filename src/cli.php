@@ -36,7 +36,7 @@ EOT
  * -l overrides the listening interface
  */
 
-require_once("phar://selenicacid.phar/autoload.php");
+require_once(__DIR__ . "/autoload.php");
 
 declare(ticks = 1);
 

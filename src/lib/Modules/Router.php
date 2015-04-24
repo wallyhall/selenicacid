@@ -10,7 +10,7 @@ class Modules_Router
 
     public static function loadModuleList()
     {
-        self::$modules = json_decode(file_get_contents("phar://selenicacid.phar/modules.json"));
+        self::$modules = json_decode(file_get_contents(__DIR__ . "/../../modules.json"));
         if (self::$modules === null) {
             // Build didn't work?
             die("\nUnable to read modules.json which implies the build process failed.\n");

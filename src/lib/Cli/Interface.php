@@ -72,9 +72,9 @@ Available commands:
     list                Lists all modules available
     
 RESTful commands (append module and parameters):
-    put                    Create new object(s)
-    delete                Delete existing object(s)
-    get                    Get object(s)
+    put                 Create new object(s)
+    delete              Delete existing object(s)
+    get                 Get object(s)
     post                Update object(s)
     
 

@@ -14,8 +14,7 @@ class Modules_ActionTest implements Modules_Interface
             ),
             $params
         );
-
-}
+    }
 
     static function getDescription()
     {

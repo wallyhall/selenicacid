@@ -10,8 +10,11 @@ function autoload($className)
         $className = substr($className, $lastNsPos + 1);
         $fileName  = str_replace('\\', DIRECTORY_SEPARATOR, $namespace) . DIRECTORY_SEPARATOR;
     }
-    $fileName .= str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
 
-    require "phar://selenicacid.phar/lib/" . $fileName;
+    $fileName .= __DIR__ . '/lib/' . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
+
+    if (file_exists($fileName)) {
+        require $fileName;
+    }
 }
 spl_autoload_register('autoload');
