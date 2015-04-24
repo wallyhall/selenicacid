@@ -1,23 +1,12 @@
 <?php
 
-class Cli_Interface
+class Cli_Interfaces_Cli extends Cli_Interfaces_Abstract
 {
     private static $shutdown = false;
-
-    public static function handleSignal($sig)
-    {
-        switch ($sig) {
-            case SIGTERM:
-                self::$shutdown = true;
-                break;
-        }
-        
-        return true;
-    }
-
+    
     public static function start()
     {
-        fwrite(STDOUT, <<<EOT
+        $fwriteReturn = self::out(<<<EOT
 ** INTERACTIVE MODE ENABLED **
 
 Welcome to selenicacid.
@@ -31,25 +20,27 @@ Ctrl+D will exit this client.
 EOT
         );
         
-        if (PCNTL_ENABLED) {
-            pcntl_signal(SIGTERM, array("Cli_Interface", "handleSignal"));
-        }
-    
         self::readCmd();
+        return true;
     }
-    
+        
     private static function readCmd()
     {
-        while (!self::$shutdown && !feof(STDIN)) {
-            fwrite(STDOUT, "selenicacid> ");
-            $cmd = trim(fgets(STDIN));
+        while (!self::$shutdown && !self::streamEnded()) {
+            self::out("selenicacid> ");
+            $buf = self::in();
+            if ($buf === false) {
+                break;
+            }
+            
+            $cmd = trim($buf);
             if ($cmd !== "") {
                 self::execCmd($cmd);
             }
         }
         
-        fwrite(STDOUT, "\n");
-        exit(0);
+        self::out("\n");
+        return true;
     }
     
     private static function execCmd($cmd)
@@ -65,7 +56,7 @@ EOT
                 break;
             
             case "help":
-                fwrite(STDOUT, <<<EOT
+                self::out(<<<EOT
 Available commands:
     exit, quit, bye     Quit the interactive client
     help                Displays this help message
@@ -85,12 +76,11 @@ EOT
             case "list":
                 $modules = Modules_Router::listModules();
                 foreach ($modules as $module => $description) {
-                    fwrite(
-                        STDOUT,
+                    self::out(
                         "\n " . $module . "\n   " .    wordwrap($description, 72, "\n   ") . "\n"
                     );
                 }
-                fwrite(STDOUT, "\n");
+                self::out("\n");
                 break;
 
             case "put":
@@ -107,17 +97,14 @@ EOT
                 
                 try {
                     $output = Modules_Router::route($cmd, $module, $assocParams, true);
-                    fwrite(
-                        STDOUT,
-                        $output . "\n"
-                    );
+                    self::out($output . "\n");
                 } catch (RouterException $e) {
-                    fwrite(STDERR, $e->getMessage() . "\n");
+                    self::out($e->getMessage() . "\n");
                 }
                 break;
             
             default:
-                fwrite(STDERR, "Invalid command.\n");
+                self::out("Invalid command.\n");
         }
         
         return true;

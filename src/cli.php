@@ -18,8 +18,8 @@ if (!PCNTL_ENABLED) {
 
 ** Important warning:
      You're running PHP without the pcntl extensions.
-     Without the pcntl extensions, you will not be able to daemonize the selenicacid
-      httpd server or cleanly exit the interactive client.
+     Without the pcntl extensions, you will not be able to daemonize the
+     selenicacid server or cleanly exit the interactive client.
      It is strongly recommended you run selenicacid on PHP with pcntl available.
 
 
@@ -40,10 +40,26 @@ require_once(__DIR__ . "/autoload.php");
 
 declare(ticks = 1);
 
-$opts = getopt("sd::p:l:");
+$opts = getopt("std::p:l:");
 
-if (!array_key_exists("s", $opts)) {
-    Cli_Interface::start();
+/* Static classes and methods are used here to avoid reader confusion:
+ * We'll never have more than one interface running at a time, and some interfaces
+ * utilise forking - we don't need objects floating around in memory unused in children.
+ */
+$result = false;
+if (!array_key_exists("s", $opts) && !array_key_exists("t", $opts)) {
+    $result = Cli_Tty::dispatch('Cli_Interfaces_Cli');
+} elseif (array_key_exists("t", $opts)) {
+    Cli_TcpServer::dispatch('Cli_Interfaces_Cli');
+    $result = Cli_TcpServer::start('0.0.0.0', 10000);
 } else {
-    Cli_HttpServer::start();
+    fwrite(STDOUT, "HTTPD server starting...\n");
+    Cli_TcpServer::dispatch('Cli_Interfaces_Http');
+    $result = Cli_TcpServer::start('0.0.0.0', 8080);
+}
+
+if ($result) {
+    exit(0);
+} else {
+    exit(1);
 }
