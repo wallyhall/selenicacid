@@ -6,7 +6,9 @@ class Modules_ActionTest_Test extends PHPUnit_Framework_TestCase
 
     public function testGet()
     {
-        $a = Modules_ActionTest::methodGet(
+        $actionTest = new Modules_ActionTest();
+    
+        $a = $actionTest->methodGet(
             array(
                 "testInput"=>"abc",
                 "anotherTestInput"=>"def"
