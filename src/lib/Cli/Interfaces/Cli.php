@@ -2,7 +2,7 @@
 
 class Cli_Interfaces_Cli extends Cli_Interfaces_Abstract
 {
-    private static $shutdown = false;
+    private $shutdown = false;
     
     public function start()
     {
