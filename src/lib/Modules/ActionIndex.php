@@ -2,21 +2,21 @@
 
 class Modules_ActionIndex implements Modules_Interface
 {
-    public static function methodGet($params) {
+    public function methodGet($params) {
         return array ("Welcome");
     }
 
-    public static function methodPut($params)
+    public function methodPut($params)
     {
         return false;
     }
 
-    public static function methodPost($params)
+    public function methodPost($params)
     {
         return false;
     }
 
-    public static function methodDelete($params)
+    public function methodDelete($params)
     {
         return false;
     }

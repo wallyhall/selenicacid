@@ -102,7 +102,8 @@ class Modules_Router
         if (!method_exists($moduleClass, $classMethod)) {
             throw new RouterException("Module does not implement method.", 405);
         }
-        $result = $moduleClass::$classMethod($params);
+        $moduleObject = new $moduleClass;
+        $result = $moduleObject->$classMethod($params);
 
         if ($json) {
             $jsonOpts = 0;

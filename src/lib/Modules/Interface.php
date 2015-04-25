@@ -2,11 +2,11 @@
 
 interface Modules_Interface
 {
-    public static function methodGet($params);
+    public function methodGet($params);
     /* ** Optional methods to be implemented as appropriate:
-    public static function methodPut($params);
-    public static function methodPost($params);
-    public static function methodDelete($params);
+    public function methodPut($params);
+    public function methodPost($params);
+    public function methodDelete($params);
     */
     
     public static function getDescription();

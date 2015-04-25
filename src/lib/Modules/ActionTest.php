@@ -2,7 +2,7 @@
 
 class Modules_ActionTest implements Modules_Interface
 {
-    static function methodGet($params)
+    public function methodGet($params)
     {
         return array_merge(
             array(
@@ -16,12 +16,13 @@ class Modules_ActionTest implements Modules_Interface
         );
     }
 
-    static function getDescription()
+
+    public static function getDescription()
     {
         return "Test module, returns machine information and random GUID.";
     }
     
-    static function getUI()
+    public static function getUI()
     {
         return array();
     }

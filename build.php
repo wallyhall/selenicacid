@@ -14,7 +14,7 @@ EOT
     );
     
     if (!defined("PHP_BINARY")) {
-        define("PHP_BINARY", PHP_BINDIR . "/php");
+        define("PHP_BINARY", $_SERVER['_']);
     }
     
     system(PHP_BINARY . " --define phar.readonly=off " . escapeshellarg(__FILE__) . " -a", $result);
