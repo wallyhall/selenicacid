@@ -11,12 +11,6 @@ class Cli_Interfaces_Cli_Test extends PHPUnit_Framework_TestCase
 
     public function test()
     {
-        Modules_Router::setModuleList(
-            array(
-                "Index"
-            )
-        );
-    
         // new CLI interface
         $cli = new Cli_Interfaces_Cli();
 

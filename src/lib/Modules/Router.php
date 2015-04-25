@@ -1,7 +1,4 @@
 <?php
-class RouterException extends Exception
-{
-}
 
 class Modules_Router
 {
@@ -87,7 +84,7 @@ class Modules_Router
         return $moduleClass;
     }
     
-    public static function route($method, $path, $params, $json=false)
+    public static function route($method, $path, $params, $data=null, $json=false)
     {
         $id = null;
         if (strlen($path) > 0) {
@@ -102,9 +99,9 @@ class Modules_Router
                 $id = substr($path, strrpos($path, '/') + 1);
             }
         }
-        
+
         if (!in_array($module, self::$modules)) {
-            throw new RouterException("Module not found.", 404);
+            throw new Modules_RouterException("Module not found.", 404);
         }
         
         $classMethod = "method" . ucwords(strtolower($method));
@@ -116,20 +113,32 @@ class Modules_Router
                 break;
             
             default:
-                throw new RouterException("selenicacid does not support method.", 501);
+                throw new Modules_RouterException("selenicacid does not support method.", 501);
         }
         
         $moduleClass = self::getModuleClass($module);
         
         if (!method_exists($moduleClass, $classMethod)) {
-            throw new RouterException("Module does not implement method.", 405);
+            throw new Modules_RouterException("Module does not implement method.", 405);
         }
         $moduleObject = new $moduleClass;
         
-        if ($classMethod == "methodPost") {
-            $result = $moduleObject->$classMethod($params);
-        } else {
-            $result = $moduleObject->$classMethod($id, $params);
+        switch ($classMethod) {
+            case "methodGet":
+                $result = $moduleObject->methodGet($id, $params);
+                break;
+        
+            case "methodDelete":
+                $result = $moduleObject->methodDelete($id, $params);
+                break;
+                
+            case "methodPut":
+                $result = $moduleObject->methodPut($id, $params, $data);
+                break;
+                
+            case "methodPost":
+                $result = $moduleObject->methodPost($params, $data);
+                break;
         }
 
         if ($json) {

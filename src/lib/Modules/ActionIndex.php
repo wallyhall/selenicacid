@@ -6,12 +6,12 @@ class Modules_ActionIndex implements Modules_Interface
         return array ("Welcome");
     }
 
-    public function methodPut($id, $params)
+    public function methodPut($id, $params, $data)
     {
         return false;
     }
 
-    public function methodPost($params)
+    public function methodPost($params, $data)
     {
         return false;
     }

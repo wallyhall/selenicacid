@@ -47,7 +47,8 @@ EOT
     {
         $params = preg_split("/\s+/", $cmd);
         $cmd = array_shift($params);
-    
+        $data = null;
+        
         switch ($cmd) {
             case "exit":
             case "quit":
@@ -84,9 +85,21 @@ EOT
                 break;
 
             case "put":
+            case "post":
+                $data = "";
+                while (!$this->shutdown && !$this->dispatcher->ended()) {
+                    $this->dispatcher->out(" data> ");
+                    $buf = $this->dispatcher->in();
+                    if ($buf === false || trim($buf) == "") {
+                        break;
+                    }
+                    $data .= $buf;
+                }
+                $data = json_decode($data);
+                // no break, fall through instead
+            
             case "get":
             case "delete":
-            case "post":
                 $module = array_shift($params);
             
                 $assocParams = array();
@@ -96,9 +109,9 @@ EOT
                 }
                 
                 try {
-                    $output = Modules_Router::route($cmd, $module, $assocParams, true);
+                    $output = Modules_Router::route($cmd, $module, $assocParams, $data, true);
                     $this->dispatcher->out($output . "\n");
-                } catch (RouterException $e) {
+                } catch (Modules_RouterException $e) {
                     $this->dispatcher->out($e->getMessage() . "\n");
                 }
                 break;

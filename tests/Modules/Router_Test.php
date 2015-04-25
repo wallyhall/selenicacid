@@ -4,6 +4,39 @@ class Modules_Router_Test extends PHPUnit_Framework_TestCase
 {
     // Tests the Modules/ActionTest class
 
+    public function testRouteInvalidMethodException()
+    {
+        $this->setExpectedException("Modules_RouterException", "", 501);
+        $result = Modules_router::route('invalidmethod', 'Test/', array(), null, false);
+    }
+
+    public function testRouteInvalidModuleException()
+    {
+        $this->setExpectedException("Modules_RouterException", "", 404);
+        $result = Modules_router::route('get', 'invalidmodule/', array(), null, false);
+    }
+    
+    public function testRouteModuleMethodNotSupportedException()
+    {
+        $this->setExpectedException("Modules_RouterException", "", 405);
+        $result = Modules_router::route('delete', 'Test/', array(), null, false);
+    }
+
+    public function testRouteModuleIdNotFound()
+    {
+        $this->setExpectedException("Modules_RouterException", "", 404);
+        $result = Modules_router::route('get', 'Test/notfound', array(), null, false);
+    }
+        
+// ** post route
+
+    public function testRouteModulePut()
+    {
+        $putData = array("abc" => "def");
+        $result = Modules_router::route('put', 'Test/', array(), $putData, false);
+        $this->assertEquals($putData, $result);
+    }
+
     public function testGetModuleClass()
     {
         $className = Modules_Router::getModuleClass("Test");
@@ -15,8 +48,8 @@ class Modules_Router_Test extends PHPUnit_Framework_TestCase
         $methodProvided = Modules_Router::moduleProvidesMethod("Test", "get");
         $this->assertEquals(true, $methodProvided, "ActionTest should provide GET");
         
-        $methodProvided = Modules_Router::moduleProvidesMethod("Test", "put");
-        $this->assertEquals(false, $methodProvided, "ActionTest should not provide PUT");
+        $methodProvided = Modules_Router::moduleProvidesMethod("Test", "delete");
+        $this->assertEquals(false, $methodProvided, "ActionTest should not provide DELETE");
     }
     
     public function testModuleLoading()

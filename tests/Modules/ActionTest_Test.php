@@ -21,7 +21,5 @@ class Modules_ActionTest_Test extends PHPUnit_Framework_TestCase
         $this->assertEquals("def", $a["anotherTestInput"]);
     }
 
-    
-
     // ...
 }

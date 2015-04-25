@@ -4,6 +4,10 @@ class Modules_ActionTest implements Modules_Interface
 {
     public function methodGet($id, $params)
     {
+        if ($id == "notfound") {
+            throw new Modules_RouterException("Test 404 thrown", 404);
+        }
+    
         return array_merge(
             array(
                 "hostname"=>php_uname('n'),
@@ -16,6 +20,10 @@ class Modules_ActionTest implements Modules_Interface
         );
     }
 
+    public function methodPut($id, $params, $data)
+    {
+        return $data;
+    }
 
     public static function getDescription()
     {
