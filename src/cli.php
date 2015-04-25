@@ -37,6 +37,9 @@ EOT
  */
 
 require_once(__DIR__ . "/autoload.php");
+if (!Modules_Router::loadModuleListFromFile(__DIR__ . "/../../modules.json")) {
+    die("\nUnable to read modules.json which implies the build process failed.\n");
+}
 
 declare(ticks = 1);
 

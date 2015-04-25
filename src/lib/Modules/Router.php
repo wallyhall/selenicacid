@@ -8,13 +8,22 @@ class Modules_Router
 
     private static $modules = null;
 
-    public static function loadModuleList()
+    public static function loadModuleListFromFile($filename)
     {
-        self::$modules = json_decode(file_get_contents(__DIR__ . "/../../modules.json"));
-        if (self::$modules === null) {
-            // Build didn't work?
-            die("\nUnable to read modules.json which implies the build process failed.\n");
+        $moduleList = json_decode(file_get_contents($filename));
+        if ($moduleList === null) {
+            return false;
         }
+        return self::setModuleList($moduleList);
+    }
+
+    public static function setModuleList($moduleList)
+    {
+        if (!is_array($moduleList)) {
+            return false;
+        }
+        self::$modules = $moduleList;
+        return true;
     }
 
     public static function listModules()
@@ -107,8 +116,3 @@ class Modules_Router
 
 
 }
-
-// Called when class is autoloaded (by nature of include()).
-// This populates Modules_Router::$modules list from JSON inside the PHAR.
-
-Modules_Router::loadModuleList();
