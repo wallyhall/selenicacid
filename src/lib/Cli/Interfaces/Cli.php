@@ -4,9 +4,9 @@ class Cli_Interfaces_Cli extends Cli_Interfaces_Abstract
 {
     private static $shutdown = false;
     
-    public static function start()
+    public function start()
     {
-        $fwriteReturn = self::out(<<<EOT
+        $fwriteReturn = $this->dispatcher->out(<<<EOT
 ** INTERACTIVE MODE ENABLED **
 
 Welcome to selenicacid.
@@ -20,30 +20,30 @@ Ctrl+D will exit this client.
 EOT
         );
         
-        self::readCmd();
+        $this->readCmd();
         return true;
     }
         
-    private static function readCmd()
+    private function readCmd()
     {
-        while (!self::$shutdown && !self::streamEnded()) {
-            self::out("selenicacid> ");
-            $buf = self::in();
+        while (!$this->shutdown && !$this->dispatcher->ended()) {
+            $this->dispatcher->out("selenicacid> ");
+            $buf = $this->dispatcher->in();
             if ($buf === false) {
                 break;
             }
             
             $cmd = trim($buf);
             if ($cmd !== "") {
-                self::execCmd($cmd);
+                $this->execCmd($cmd);
             }
         }
         
-        self::out("\n");
+        $this->dispatcher->out("\n");
         return true;
     }
     
-    private static function execCmd($cmd)
+    private function execCmd($cmd)
     {
         $params = preg_split("/\s+/", $cmd);
         $cmd = array_shift($params);
@@ -52,11 +52,11 @@ EOT
             case "exit":
             case "quit":
             case "bye":
-                self::$shutdown = true;
+                $this->shutdown = true;
                 break;
             
             case "help":
-                self::out(<<<EOT
+                $this->dispatcher->out(<<<EOT
 Available commands:
     exit, quit, bye     Quit the interactive client
     help                Displays this help message
@@ -76,11 +76,11 @@ EOT
             case "list":
                 $modules = Modules_Router::listModules();
                 foreach ($modules as $module => $description) {
-                    self::out(
+                    $this->dispatcher->out(
                         "\n " . $module . "\n   " .    wordwrap($description, 72, "\n   ") . "\n"
                     );
                 }
-                self::out("\n");
+                $this->dispatcher->out("\n");
                 break;
 
             case "put":
@@ -97,14 +97,14 @@ EOT
                 
                 try {
                     $output = Modules_Router::route($cmd, $module, $assocParams, true);
-                    self::out($output . "\n");
+                    $this->dispatcher->out($output . "\n");
                 } catch (RouterException $e) {
-                    self::out($e->getMessage() . "\n");
+                    $this->dispatcher->out($e->getMessage() . "\n");
                 }
                 break;
             
             default:
-                self::out("Invalid command.\n");
+                $this->dispatcher->out("Invalid command.\n");
         }
         
         return true;

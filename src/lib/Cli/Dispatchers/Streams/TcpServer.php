@@ -1,28 +1,23 @@
 <?php
-/*/*        if (self::$shutdown) {
+/*/*        if ($this->shutdown) {
             $response = "HTTP/1.0 500 Server shutting down.\n\nServer shutdown in progress.";
-            self::error("Request aborted due to pending shutdown.\n");
+            $this->error("Request aborted due to pending shutdown.\n");
                 
         } else*/
-class Cli_TcpServer
+class Cli_Dispatchers_Streams_TcpServer extends Cli_Dispatchers_Streams_Abstract
 {
-    private static $shutdown = false;
-    private static $sock = null;
-    private static $interfaceClass = null;
+    private $shutdown = false;
+    private $sock = null;
     
-    private static $timeout = 5;
-    
-    public static function dispatch($interfaceClass)
-    {
-        self::$interfaceClass = $interfaceClass;
-    }
+    private $ip = '0.0.0.0';
+    private $port = 10000;
 
-    public static function handleSignal($sig)
+    public function handleSignal($sig)
     {
         switch ($sig) {
             case SIGTERM:
             case SIGINT:
-                self::$shutdown = true;
+                $this->shutdown = true;
                 fwrite(STDERR, "** caught shutdown request, shutting down...\n");
                 break;
         }
@@ -30,20 +25,25 @@ class Cli_TcpServer
         return true;
     }
 
-    public static function start($ip, $port, $user=null, $daemon=false, $timeout=5)
+    public function __construct($ip, $port, $timeout=5)
+    {
+        $this->ip = $ip;
+        $this->port = $port;
+        $this->timeout = $timeout;
+    }
+
+    protected function start()
     {
         if (PCNTL_ENABLED) {
             pcntl_signal(SIGTERM, array("Cli_TcpServer", "handleSignal"));
             pcntl_signal(SIGINT, array("Cli_TcpServer", "handleSignal"));
         }
     
-        self::$timeout = $timeout;
-    
-        self::openPort($ip, $port);
-        self::waitForConnection($timeout);
+        $this->openPort($this->ip, $this->port);
+        $this->waitForConnection($this->timeout);
     }
 
-    private static function forkConnection($conn)
+    private function forkConnection($conn)
     {
         $fork = -1;
         $childPid = "";
@@ -57,13 +57,15 @@ class Cli_TcpServer
                 fclose($conn);
                 return true;
             } else {
-                fclose(self::$sock);
+                fclose($this->sock);
                 $childPid = getmypid();
             }
         }
 
-        $interfaceClass = self::$interfaceClass;
-        $interfaceClass::dispatchMethod($conn, $conn, self::$timeout);
+        $this->streamArrayIn = array($conn);
+        $this->streamArrayOut = array($conn);
+
+        $this->interface->start();
 
         fclose($conn);
 
@@ -75,19 +77,19 @@ class Cli_TcpServer
         }
     }
     
-    private static function openPort($ip, $port)
+    private function openPort($ip, $port)
     {
-        if ((self::$sock = stream_socket_server("tcp://" . $ip . ":" . $port, $errno, $errstr)) === false) {
+        if (($this->sock = stream_socket_server("tcp://" . $ip . ":" . $port, $errno, $errstr)) === false) {
             fwrite(STDERR, "** stream_socket_server() failed: " . $errno . " - " . $errstr . "\n");
             exit(100);
         }
         return true;
     }
 
-    static public function waitForConnection()
+    public function waitForConnection()
     {
-        while (!self::$shutdown) {
-            if (($conn = stream_socket_accept(self::$sock)) === false) {
+        while (!$this->shutdown) {
+            if (($conn = stream_socket_accept($this->sock)) === false) {
                 fwrite(STDERR, "Accept failed.\n");
                 continue;
             }
@@ -95,15 +97,15 @@ class Cli_TcpServer
 
             // Exit point for children.  Parent continues.
             // If fork fails or isn't available, this function will block.
-            self::forkConnection($conn);
+            $this->forkConnection($conn);
         }
 
         if (PCNTL_ENABLED) {
             pcntl_wait($status);
         }
-        fclose(self::$sock);
+        fclose($this->sock);
 
-        if (!self::$shutdown) {
+        if (!$this->shutdown) {
             fwrite(STDERR, "Adnormal exit.\n");
             exit(128);
         }

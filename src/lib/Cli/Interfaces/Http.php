@@ -2,13 +2,13 @@
 
 class Cli_Interfaces_Http extends Cli_Interfaces_Abstract
 {
-    public static function start()
+    public function start()
     {
         $requestFinished = false;
         $requestLines = array();
         /** shutdown **/
-        while (!$requestFinished && sizeof($requestLines) < 100) {
-            $buf = self::in();
+        while (!$requestFinished && sizeof($requestLines) < 100 && !$this->dispatcher->ended()) {
+            $buf = $this->dispatcher->in();
             if ($buf === false) {
                 break;
             }
@@ -23,7 +23,7 @@ class Cli_Interfaces_Http extends Cli_Interfaces_Abstract
 
         if (!$requestFinished) {
             $response = "HTTP/1.0 400 Bad request.\n\nBad request.";
-            self::error("Request was rejected ... size: " . sizeof($requestLines) . "\n");
+            $this->dispatcher->error("Request was rejected ... size: " . sizeof($requestLines) . "\n");
                 
         } else {
             // do stuff
@@ -42,7 +42,7 @@ class Cli_Interfaces_Http extends Cli_Interfaces_Abstract
             $response = "";
             if ($rawPath === null) {
                 $response = "HTTP/1.0 400 Bad request.\n\nBad request.";
-                self::error("Request appears malformed.\n");
+                $this->dispatcher->error("Request appears malformed.\n");
             } else {
                     
                 // URL HANDLING
@@ -69,6 +69,6 @@ class Cli_Interfaces_Http extends Cli_Interfaces_Abstract
             }
         }
         
-        self::out($response);
+        $this->dispatcher->out($response);
     }
 }

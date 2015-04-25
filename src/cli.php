@@ -46,16 +46,24 @@ $opts = getopt("std::p:l:");
  * We'll never have more than one interface running at a time, and some interfaces
  * utilise forking - we don't need objects floating around in memory unused in children.
  */
-$result = false;
+$interface = false;
+
 if (!array_key_exists("s", $opts) && !array_key_exists("t", $opts)) {
-    $result = Cli_Tty::dispatch('Cli_Interfaces_Cli');
+    $cli = new Cli_Interfaces_Cli();
+    $tty = new Cli_Dispatchers_Streams_Tty();
+    $tty->dispatch($cli);
+    
 } elseif (array_key_exists("t", $opts)) {
-    Cli_TcpServer::dispatch('Cli_Interfaces_Cli');
-    $result = Cli_TcpServer::start('0.0.0.0', 10000);
+    fwrite(STDOUT, "telnet server starting...\n");
+    $cli = new Cli_Interfaces_Cli();
+    $tcp = new Cli_Dispatchers_Streams_TcpServer('0.0.0.0', 10000);
+    $tcp->dispatch($cli);
+    
 } else {
-    fwrite(STDOUT, "HTTPD server starting...\n");
-    Cli_TcpServer::dispatch('Cli_Interfaces_Http');
-    $result = Cli_TcpServer::start('0.0.0.0', 8080);
+    fwrite(STDOUT, "httpd server starting...\n");
+    $http = new Cli_Interfaces_Http();
+    $tcp = new Cli_Dispatchers_Streams_TcpServer('0.0.0.0', 8080);
+    $tcp->dispatch($http);
 }
 
 if ($result) {
