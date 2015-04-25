@@ -24,7 +24,7 @@ class Cli_Interfaces_Cli_Test extends PHPUnit_Framework_TestCase
         $dispatcher = $this->getMockForAbstractClass('Cli_Dispatchers_Abstract');
         $dispatcher
             ->method('in')
-            ->will($this->onConsecutiveCalls('get Index', 'exit'));
+            ->will($this->onConsecutiveCalls('get Index/', 'exit'));
         
         $dispatcher
             ->method('out')

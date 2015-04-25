@@ -10,10 +10,18 @@ class Modules_Router
 
     public static function loadModuleListFromFile($filename)
     {
-        $moduleList = json_decode(file_get_contents($filename));
+        if (
+            !is_readable($filename) ||
+            ($moduleListJson = file_get_contents($filename)) === false
+        ) {
+            return false;
+        }
+        
+        $moduleList = json_decode($moduleListJson);
         if ($moduleList === null) {
             return false;
         }
+        
         return self::setModuleList($moduleList);
     }
 
@@ -26,7 +34,7 @@ class Modules_Router
         return true;
     }
 
-    public static function listModules()
+    public static function getModuleList()
     {
         return self::$modules;
     }
@@ -79,8 +87,22 @@ class Modules_Router
         return $moduleClass;
     }
     
-    public static function route($method, $module, $params, $json=false)
+    public static function route($method, $path, $params, $json=false)
     {
+        $id = null;
+        if (strlen($path) > 0) {
+            $module = $path;
+            if (substr($path, -1) == '/') {
+                // strip tailing / - it's just a module URI
+                $module = substr($path, 0, strlen($path) - 1);
+            } else {
+                // get module path
+                $module = substr($path, 0, strrpos($path, '/'));
+                // get object identifier
+                $id = substr($path, strrpos($path, '/') + 1);
+            }
+        }
+        
         if (!in_array($module, self::$modules)) {
             throw new RouterException("Module not found.", 404);
         }
@@ -103,7 +125,12 @@ class Modules_Router
             throw new RouterException("Module does not implement method.", 405);
         }
         $moduleObject = new $moduleClass;
-        $result = $moduleObject->$classMethod($params);
+        
+        if ($classMethod == "methodPost") {
+            $result = $moduleObject->$classMethod($params);
+        } else {
+            $result = $moduleObject->$classMethod($id, $params);
+        }
 
         if ($json) {
             $jsonOpts = 0;

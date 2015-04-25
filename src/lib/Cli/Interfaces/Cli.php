@@ -74,7 +74,7 @@ EOT
                 break;
             
             case "list":
-                $modules = Modules_Router::listModules();
+                $modules = Modules_Router::getModuleList();
                 foreach ($modules as $module => $description) {
                     $this->dispatcher->out(
                         "\n " . $module . "\n   " .    wordwrap($description, 72, "\n   ") . "\n"

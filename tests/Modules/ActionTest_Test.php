@@ -9,6 +9,7 @@ class Modules_ActionTest_Test extends PHPUnit_Framework_TestCase
         $actionTest = new Modules_ActionTest();
     
         $a = $actionTest->methodGet(
+            null,
             array(
                 "testInput"=>"abc",
                 "anotherTestInput"=>"def"
@@ -19,6 +20,8 @@ class Modules_ActionTest_Test extends PHPUnit_Framework_TestCase
         $this->assertEquals("abc", $a["testInput"]);
         $this->assertEquals("def", $a["anotherTestInput"]);
     }
+
+    
 
     // ...
 }

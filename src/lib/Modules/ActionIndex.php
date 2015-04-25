@@ -2,11 +2,11 @@
 
 class Modules_ActionIndex implements Modules_Interface
 {
-    public function methodGet($params) {
+    public function methodGet($id, $params) {
         return array ("Welcome");
     }
 
-    public function methodPut($params)
+    public function methodPut($id, $params)
     {
         return false;
     }
@@ -16,7 +16,7 @@ class Modules_ActionIndex implements Modules_Interface
         return false;
     }
 
-    public function methodDelete($params)
+    public function methodDelete($id, $params)
     {
         return false;
     }

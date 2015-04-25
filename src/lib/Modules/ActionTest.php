@@ -2,7 +2,7 @@
 
 class Modules_ActionTest implements Modules_Interface
 {
-    public function methodGet($params)
+    public function methodGet($id, $params)
     {
         return array_merge(
             array(
@@ -24,6 +24,24 @@ class Modules_ActionTest implements Modules_Interface
     
     public static function getUI()
     {
-        return array();
+        /* Definition of the UI is based on the concept behind ClutterScript:
+         * https://developer.gnome.org/clutter-cookbook/stable/script-ui.html
+         *
+         * Rather than directly returning JSON, we return a stack of PHP objects.
+         * The Interface is responsible for deciding whether to convert to JSON or not.
+         */
+        
+        return array("abc");
+        /*$window = new UI_Window();
+        
+        
+        
+        $window->addGetQueryPage();
+        $window->addGetResultsPage();
+        $window->addPostPage();
+        $window->addPutPage();
+        $window->addDeletePage();
+        
+        return $window;*/
     }
 }

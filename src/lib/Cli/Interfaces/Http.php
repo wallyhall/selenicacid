@@ -47,9 +47,9 @@ class Cli_Interfaces_Http extends Cli_Interfaces_Abstract
                     
                 // URL HANDLING
                     
-                $module = substr($rawPath, 1);
-                if ($module === false) {
-                    $module = "Index";
+                $path = substr($rawPath, 1);
+                if ($path === false) {
+                    $path = "Index/";
                 }
                 
                 if ($rawParams === null) {
@@ -59,7 +59,7 @@ class Cli_Interfaces_Http extends Cli_Interfaces_Abstract
                 }
                 
                 try {
-                    $output = Modules_Router::route($method, $module, $assocParams, true);
+                    $output = Modules_Router::route($method, $path, $assocParams, true);
                     $response = "HTTP/1.0 200 OK\n\n" . $output;
                 } catch (RouterException $e) {
                     $response =
