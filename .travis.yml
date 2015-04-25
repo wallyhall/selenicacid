@@ -6,4 +6,4 @@ php:
 
 before_script: ./build.php
 
-script: phpunit --configuration tests/phpunit.xml
+script: phpunit --configuration tests/phpunit.xml --coverage-text
