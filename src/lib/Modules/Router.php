@@ -72,7 +72,7 @@ class Modules_Router
                 "Action" .
                 substr(
                     $module,
-                    $scorePos - strlen($moduleClass) + 1
+                    $scorePos - strlen($module) + 1
                 )
             );
 
