@@ -11,6 +11,7 @@ class Cli_Interfaces_Cli_Test extends PHPUnit_Framework_TestCase
 
     public function test()
     {
+
         // new CLI interface
         $cli = new Cli_Interfaces_Cli();
 

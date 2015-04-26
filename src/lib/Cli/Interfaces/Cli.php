@@ -19,14 +19,14 @@ Ctrl+D will exit this client.
 
 EOT
         );
-        
+
         $this->readCmd();
         return true;
     }
         
     private function readCmd()
     {
-        while (!$this->dispatcher->ended()) {
+        while (!$this->dispatcher->ended() && !$this->shutdown) {
             $this->dispatcher->out("selenicacid> ");
             $buf = $this->dispatcher->in();
             if ($buf === false) {
