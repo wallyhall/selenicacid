@@ -6,24 +6,10 @@
         } else*/
 class Cli_Dispatchers_Streams_TcpServer extends Cli_Dispatchers_Streams_Abstract
 {
-    private $shutdown = false;
     private $sock = null;
     
     private $ip = '0.0.0.0';
     private $port = 10000;
-
-    public function handleSignal($sig)
-    {
-        switch ($sig) {
-            case SIGTERM:
-            case SIGINT:
-                $this->shutdown = true;
-                fwrite(STDERR, "** caught shutdown request, shutting down...\n");
-                break;
-        }
-        
-        return true;
-    }
 
     public function __construct($ip, $port, $timeout=5)
     {
@@ -34,11 +20,6 @@ class Cli_Dispatchers_Streams_TcpServer extends Cli_Dispatchers_Streams_Abstract
 
     protected function start()
     {
-        if (PCNTL_ENABLED) {
-            pcntl_signal(SIGTERM, array("Cli_TcpServer", "handleSignal"));
-            pcntl_signal(SIGINT, array("Cli_TcpServer", "handleSignal"));
-        }
-    
         $this->openPort($this->ip, $this->port);
         $this->waitForConnection($this->timeout);
     }
@@ -89,7 +70,7 @@ class Cli_Dispatchers_Streams_TcpServer extends Cli_Dispatchers_Streams_Abstract
     public function waitForConnection()
     {
         while (!$this->shutdown) {
-            if (($conn = stream_socket_accept($this->sock)) === false) {
+            if (($conn = @stream_socket_accept($this->sock)) === false) {
                 fwrite(STDERR, "Accept failed.\n");
                 continue;
             }
@@ -107,7 +88,7 @@ class Cli_Dispatchers_Streams_TcpServer extends Cli_Dispatchers_Streams_Abstract
 
         if (!$this->shutdown) {
             fwrite(STDERR, "Adnormal exit.\n");
-            exit(128);
+            return false;
         }
     }
 

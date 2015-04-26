@@ -26,7 +26,7 @@ EOT
         
     private function readCmd()
     {
-        while (!$this->shutdown && !$this->dispatcher->ended()) {
+        while (!$this->dispatcher->ended()) {
             $this->dispatcher->out("selenicacid> ");
             $buf = $this->dispatcher->in();
             if ($buf === false) {

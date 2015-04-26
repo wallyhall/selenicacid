@@ -51,22 +51,23 @@ $opts = getopt("std::p:l:");
  */
 $interface = false;
 
+$result = false;
 if (!array_key_exists("s", $opts) && !array_key_exists("t", $opts)) {
     $cli = new Cli_Interfaces_Cli();
     $tty = new Cli_Dispatchers_Streams_Tty();
-    $tty->dispatch($cli);
+    $result = $tty->dispatch($cli);
     
 } elseif (array_key_exists("t", $opts)) {
     fwrite(STDOUT, "telnet server starting...\n");
     $cli = new Cli_Interfaces_Cli();
     $tcp = new Cli_Dispatchers_Streams_TcpServer('0.0.0.0', 10000);
-    $tcp->dispatch($cli);
+    $result = $tcp->dispatch($cli);
     
 } else {
     fwrite(STDOUT, "httpd server starting...\n");
     $http = new Cli_Interfaces_Http();
     $tcp = new Cli_Dispatchers_Streams_TcpServer('0.0.0.0', 8080);
-    $tcp->dispatch($http);
+    $result = $tcp->dispatch($http);
 }
 
 if ($result) {
