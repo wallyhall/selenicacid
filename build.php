@@ -12,11 +12,37 @@ Attempting to auto-override...
 
 EOT
     );
-    
+
     if (!defined("PHP_BINARY")) {
-        define("PHP_BINARY", $_SERVER['_']);
+        $phpPath = realpath(PHP_BINDIR . "/php");
+        if ($phpPath === false) {
+            fwrite(STDERR, "Failed to automatically locate PHP binary path.\n");
+        } else {
+            fwrite(STDOUT, <<<EOT
+Found PHP at path: `$phpPath`.
+Enter an alternative path if desired, or press enter to proceed: 
+EOT
+            );
+            $input = trim(fgets(STDIN));
+            if (strlen($input) === 0) {
+                define("PHP_BINARY", $phpPath);
+            } else {
+                $phpPath = realpath($input);
+            }
+        }
+
+        while (!defined("PHP_BINARY")) {
+            if ($phpPath !== false) {
+                define("PHP_BINARY", $phpPath);
+                fwrite(STDOUT, "Proceeding with PHP binary path: `" . $phpPath . "`\n");
+            } else {
+                fwrite(STDERR, "Could not resolve specified path.\n");
+                fwrite(STDOUT, "Please enter your PHP binary path: ");
+                $phpPath = realpath(trim(fgets(STDIN)));
+            }
+        }
     }
-    
+
     system(PHP_BINARY . " --define phar.readonly=off " . escapeshellarg(__FILE__) . " -a", $result);
     if ($result !== 0) {
         fwrite(STDERR, <<<EOT
